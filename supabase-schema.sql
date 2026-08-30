@@ -87,6 +87,13 @@ CREATE POLICY "Users can manage their own settings"
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can read profiles for mail" ON public.user_settings;
+CREATE POLICY "Users can read profiles for mail"
+  ON public.user_settings
+  FOR SELECT
+  TO authenticated
+  USING (true);
+
 -- Function to resolve recipient user_id by username or email for CloudDesk Mail
 CREATE OR REPLACE FUNCTION public.get_user_id_by_address(target_address TEXT)
 RETURNS UUID
@@ -207,11 +214,20 @@ CREATE INDEX IF NOT EXISTS idx_emails_user_folder ON public.emails(user_id, fold
 ALTER TABLE public.emails ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can manage their own emails" ON public.emails;
-CREATE POLICY "Users can manage their own emails"
+DROP POLICY IF EXISTS "Users can manage own emails" ON public.emails;
+CREATE POLICY "Users can manage own emails"
   ON public.emails
   FOR ALL
+  TO authenticated
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can deliver emails to inboxes" ON public.emails;
+CREATE POLICY "Users can deliver emails to inboxes"
+  ON public.emails
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = user_id OR folder = 'inbox');
 
 -- ============================================================
 -- 7. RECENT FILES TABLE

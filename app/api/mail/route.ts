@@ -1,8 +1,69 @@
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { getGuestEmails, addGuestEmail } from '@/lib/guest-mail'
 import { EmailMessage } from '@/lib/mail-api'
+
+function getAdminClient() {
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    return createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      { auth: { persistSession: false } }
+    )
+  }
+  return null
+}
+
+async function resolveRecipientId(
+  adminClient: ReturnType<typeof getAdminClient>,
+  userClient: any,
+  cleanAddress: string
+): Promise<string | null> {
+  const prefix = cleanAddress.split('@')[0]
+  const client = adminClient || userClient
+
+  // 1. Try RPC function
+  try {
+    const { data: rpcId } = await client.rpc('get_user_id_by_address', { target_address: cleanAddress })
+    if (rpcId) return rpcId
+  } catch {}
+
+  // 2. Try user_settings table
+  try {
+    const { data: row } = await client
+      .from('user_settings')
+      .select('user_id')
+      .or(`email.ilike.${cleanAddress},username.ilike.${prefix},username.ilike.${cleanAddress}`)
+      .limit(1)
+      .maybeSingle()
+    if (row?.user_id) return row.user_id
+  } catch {}
+
+  // 3. Try auth.admin.listUsers with service role
+  if (adminClient) {
+    try {
+      const { data: { users } } = await adminClient.auth.admin.listUsers()
+      if (users && users.length > 0) {
+        const matched = users.find((u) => {
+          const uEmail = u.email?.toLowerCase() || ''
+          const uName = (u.user_metadata?.username as string)?.toLowerCase() || ''
+          const uPrefix = uEmail.split('@')[0]
+          return (
+            uEmail === cleanAddress ||
+            uName === prefix ||
+            uName === cleanAddress ||
+            uPrefix === prefix
+          )
+        })
+        if (matched) return matched.id
+      }
+    } catch {}
+  }
+
+  return null
+}
 
 export async function GET() {
   const cookieStore = await cookies()
@@ -82,6 +143,7 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
+    const adminClient = getAdminClient()
 
     const senderAddress = user?.email || 'user@clouddesk.net'
 
@@ -94,7 +156,8 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Insert into sender's 'sent' folder
-    const { data: sentRow, error: sentError } = await supabase
+    const dbClient = adminClient || supabase
+    const { data: sentRow, error: sentError } = await dbClient
       .from('emails')
       .insert({
         user_id: user.id,
@@ -113,38 +176,18 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (sentError) {
+      console.error('Failed to save to sent folder:', sentError)
       const sent = addGuestEmail(senderAddress, to, subject, msgBody || '', attachment)
       return NextResponse.json(sent, { status: 201 })
     }
 
-    // 2. Deliver to recipient inbox
+    // 2. Resolve recipient user ID
     const cleanTo = to.toLowerCase().trim()
-    let recipientUserId: string | null = null
+    const recipientUserId = await resolveRecipientId(adminClient, supabase, cleanTo)
 
-    // Try RPC function first
-    try {
-      const { data: rpcUserId } = await supabase.rpc('get_user_id_by_address', { target_address: cleanTo })
-      if (rpcUserId) recipientUserId = rpcUserId
-    } catch {}
-
-    // Fallback: Check user_settings by email or username
-    if (!recipientUserId) {
-      const prefix = cleanTo.split('@')[0]
-      const { data: settingsRow } = await supabase
-        .from('user_settings')
-        .select('user_id')
-        .or(`email.ilike.${cleanTo},username.ilike.${prefix},username.ilike.${cleanTo}`)
-        .limit(1)
-        .maybeSingle()
-
-      if (settingsRow?.user_id) {
-        recipientUserId = settingsRow.user_id
-      }
-    }
-
+    // 3. Deliver to recipient's inbox
     if (recipientUserId && recipientUserId !== user.id) {
-      // Store in recipient's inbox
-      await supabase.from('emails').insert({
+      const { error: inboxError } = await dbClient.from('emails').insert({
         user_id: recipientUserId,
         folder: 'inbox',
         from_address: senderAddress,
@@ -157,6 +200,14 @@ export async function POST(request: NextRequest) {
         attachment_mime: attachment?.mimeType || null,
         attachment_data: attachment?.dataUrl || null,
       })
+
+      if (inboxError) {
+        console.error('Failed to deliver email to recipient inbox:', inboxError)
+      } else {
+        console.log(`Successfully delivered email to user ${recipientUserId}`)
+      }
+    } else {
+      console.warn(`Could not find recipient matching "${to}"`)
     }
 
     const createdMsg: EmailMessage = {
@@ -172,7 +223,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(createdMsg, { status: 201 })
-  } catch {
+  } catch (err) {
+    console.error('Mail POST exception:', err)
     const sent = addGuestEmail('user@clouddesk.net', to, subject, msgBody || '', attachment)
     return NextResponse.json(sent, { status: 201 })
   }
