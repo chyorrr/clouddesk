@@ -21,26 +21,41 @@ async function seedUserFilesystem(userId: string) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     )
 
+    // Check existing root items
     const { data: existing } = await adminClient
       .from('filesystem')
-      .select('name')
+      .select('id, name')
       .eq('user_id', userId)
       .is('parent_id', null)
 
-    const existingNames = new Set((existing || []).map(item => item.name))
-    const missingFolders = DEFAULT_FOLDERS.filter(name => !existingNames.has(name))
-
-    if (missingFolders.length > 0) {
-      await adminClient.from('filesystem').insert(
-        missingFolders.map((name) => ({
-          user_id: userId,
-          parent_id: null,
-          name,
-          type: 'folder',
-          is_deleted: false,
-        }))
-      )
+    if (existing && existing.length > 0) {
+      // User is already seeded! Clean up any duplicates if any exist
+      const seen = new Set<string>()
+      const duplicateIds: string[] = []
+      for (const item of existing) {
+        const lower = item.name.toLowerCase()
+        if (seen.has(lower)) {
+          duplicateIds.push(item.id)
+        } else {
+          seen.add(lower)
+        }
+      }
+      if (duplicateIds.length > 0) {
+        await adminClient.from('filesystem').delete().in('id', duplicateIds)
+      }
+      return
     }
+
+    // Brand new user: insert default root folders once
+    await adminClient.from('filesystem').insert(
+      DEFAULT_FOLDERS.map((name) => ({
+        user_id: userId,
+        parent_id: null,
+        name,
+        type: 'folder',
+        is_deleted: false,
+      }))
+    )
 
     await adminClient
       .from('user_settings')

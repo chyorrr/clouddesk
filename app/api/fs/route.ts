@@ -42,7 +42,32 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await query
     if (error) throw error
-    return NextResponse.json(data)
+
+    // Deduplicate any duplicate folders/files with the exact same name
+    const seen = new Set<string>()
+    const duplicateIds: string[] = []
+    const uniqueItems = (data || []).filter((item: { id: string; name: string; type: string }) => {
+      const key = `${item.type}:${item.name.toLowerCase()}`
+      if (seen.has(key)) {
+        duplicateIds.push(item.id)
+        return false
+      }
+      seen.add(key)
+      return true
+    })
+
+    // Asynchronously delete duplicate records from database
+    if (duplicateIds.length > 0) {
+      supabase
+        .from('filesystem')
+        .delete()
+        .in('id', duplicateIds)
+        .eq('user_id', user.id)
+        .then(() => {})
+        .catch(() => {})
+    }
+
+    return NextResponse.json(uniqueItems)
   } catch (err) {
     if (isGuest) {
       return NextResponse.json(getGuestFiles(parentIdParam, deleted))

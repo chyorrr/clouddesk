@@ -39,6 +39,14 @@ CREATE INDEX IF NOT EXISTS idx_filesystem_user_deleted
 CREATE INDEX IF NOT EXISTS idx_filesystem_name_search 
   ON public.filesystem USING gin(to_tsvector('english', name));
 
+-- Auto-cleanup any duplicate root folders from previous sessions
+DELETE FROM public.filesystem a
+USING public.filesystem b
+WHERE a.id > b.id
+  AND a.user_id = b.user_id
+  AND (a.parent_id IS NULL AND b.parent_id IS NULL)
+  AND lower(a.name) = lower(b.name);
+
 -- Row Level Security
 ALTER TABLE public.filesystem ENABLE ROW LEVEL SECURITY;
 
