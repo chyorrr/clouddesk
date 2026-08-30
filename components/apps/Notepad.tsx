@@ -40,22 +40,42 @@ export default function Notepad({
 
   // Load file content
   useEffect(() => {
-    if (!item) return
+    setCurrentItem(item || null)
+    if (!item) {
+      if (initialContent !== undefined) {
+        setContent(initialContent)
+        setSavedContent(initialContent)
+      }
+      return
+    }
     setLoading(true)
     getFileContent(item.id)
       .then(text => {
-        setContent(text)
-        setSavedContent(text)
+        const finalText = text || initialContent || ''
+        setContent(finalText)
+        setSavedContent(finalText)
       })
-      .catch(() => setContent(''))
+      .catch(() => {
+        const fallback = initialContent || ''
+        setContent(fallback)
+        setSavedContent(fallback)
+      })
       .finally(() => setLoading(false))
-  }, [item])
+  }, [item, initialContent])
 
-  // Update window title
+  const lastTitleRef = useRef('')
+  const onTitleChangeRef = useRef(onTitleChange)
+  onTitleChangeRef.current = onTitleChange
+
+  // Update window title safely
   useEffect(() => {
     const name = currentItem?.name || 'Untitled.txt'
-    onTitleChange?.(`${isDirty ? '* ' : ''}${name} — Notepad`)
-  }, [isDirty, currentItem, onTitleChange])
+    const newTitle = `${isDirty ? '* ' : ''}${name} — Notepad`
+    if (newTitle !== lastTitleRef.current) {
+      lastTitleRef.current = newTitle
+      onTitleChangeRef.current?.(newTitle)
+    }
+  }, [isDirty, currentItem])
 
   const handleSave = useCallback(async () => {
     if (!currentItem) {

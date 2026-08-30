@@ -340,15 +340,26 @@ export default function DesktopClient({ username, userId, onLogout }: DesktopCli
           const windowFolder = w.data?.folderId ?? null
           return targetFolder === windowFolder
         }
-        // For file-specific viewers, match same file ID
-        if (data?.item && (w.data?.item as FsItem)?.id) {
-          return (w.data?.item as FsItem).id === (data.item as FsItem).id
+        // For file-specific viewers (notepad, image-viewer, pdf-viewer, media-player):
+        if (data?.item) {
+          const targetFileId = (data.item as FsItem).id
+          const windowFileId = (w.data?.item as FsItem)?.id
+          return targetFileId === windowFileId
+        }
+        if (w.data?.item) {
+          return false
         }
         // Default: single instance for all other apps
         return true
       })
 
       if (existing) {
+        if (data) {
+          useWindowStore.getState().updateWindow(existing.id, {
+            data,
+            title: data.item ? `${(data.item as FsItem).name} — Notepad` : existing.title,
+          })
+        }
         useWindowStore.getState().focusWindow(existing.id)
         if (existing.minimized) {
           useWindowStore.getState().restoreWindow(existing.id)
@@ -595,7 +606,11 @@ export default function DesktopClient({ username, userId, onLogout }: DesktopCli
             {renderAppContent(win.appId, win.data, win.id, {
               onOpenFile: handleOpenFile,
               onClose: () => closeWindow(win.id),
-              onTitleChange: (title) => updateWindow(win.id, { title }),
+              onTitleChange: (title) => {
+                if (win.title !== title) {
+                  updateWindow(win.id, { title })
+                }
+              },
               username,
               onLaunchApp: (appId, data) => launchApp(appId, data),
             })}

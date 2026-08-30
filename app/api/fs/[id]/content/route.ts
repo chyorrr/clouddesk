@@ -33,28 +33,33 @@ export async function GET(_req: NextRequest, { params }: Params) {
       .eq('user_id', user.id)
       .single()
 
-    if (!item?.storage_path) {
-      return new NextResponse('', { status: 200 })
+    if (!item?.storage_path || item.storage_path.startsWith('local://')) {
+      const fallbackText = getGuestFileContent(id)
+      return new NextResponse(fallbackText, {
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+      })
     }
 
     const { data, error } = await supabase.storage
       .from('user-files')
       .download(item.storage_path)
 
-    if (error) return new NextResponse('', { status: 200 })
+    if (error || !data) {
+      const fallbackText = getGuestFileContent(id)
+      return new NextResponse(fallbackText, {
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+      })
+    }
 
     const text = await data.text()
     return new NextResponse(text, {
       headers: { 'Content-Type': 'text/plain; charset=utf-8' }
     })
   } catch (err) {
-    if (isGuest) {
-      const text = getGuestFileContent(id)
-      return new NextResponse(text, {
-        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
-      })
-    }
-    return new NextResponse('', { status: 200 })
+    const text = getGuestFileContent(id)
+    return new NextResponse(text, {
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+    })
   }
 }
 
