@@ -740,26 +740,65 @@ html, body {
 
 .taskbar-divider {
   width: 2px;
-  height: 26px;
+  height: 28px;
   border-left: 1px solid var(--bevel-mid-dark);
   border-right: 1px solid var(--bevel-light);
   flex-shrink: 0;
-  margin: 0 2px;
+  margin: 0 4px;
+}
+
+.taskbar-quick-launch {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+.quick-launch-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 2px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  cursor: pointer;
+  outline: none;
+}
+
+.quick-launch-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid;
+  border-top-color: var(--bevel-light);
+  border-left-color: var(--bevel-light);
+  border-bottom-color: var(--bevel-dark);
+  border-right-color: var(--bevel-dark);
+}
+
+.quick-launch-btn:active {
+  background: rgba(0, 0, 0, 0.1);
+  border-top-color: var(--bevel-dark);
+  border-left-color: var(--bevel-dark);
+  border-bottom-color: var(--bevel-light);
+  border-right-color: var(--bevel-light);
 }
 
 .start-btn {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 2px 10px 2px 6px;
-  height: 28px;
+  gap: 6px;
+  padding: 3px 12px 3px 8px;
+  height: 30px;
   font-family: var(--font-ui);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: bold;
   background: var(--sys-bg);
-  cursor: default;
+  cursor: pointer;
   flex-shrink: 0;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.3px;
 
   border: 2px solid;
   border-top-color:    var(--bevel-light);

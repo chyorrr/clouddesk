@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
 import { useWindowStore, WindowState, AppId } from '@/store/windows'
@@ -220,31 +220,37 @@ export default function Taskbar({
         <div className="taskbar-divider" aria-hidden="true" />
 
         <div className="taskbar-quick-launch" title="Quick Launch">
-          <div style={{ display: 'flex', gap: 1, height: 22, alignItems: 'center', paddingRight: 2 }} aria-hidden="true">
-            <div style={{ width: 2, height: 18, borderLeft: '1px solid var(--bevel-light)', borderRight: '1px solid var(--bevel-dark)' }} />
-            <div style={{ width: 2, height: 18, borderLeft: '1px solid var(--bevel-light)', borderRight: '1px solid var(--bevel-dark)' }} />
+          <div style={{ display: 'flex', gap: 1, height: 24, alignItems: 'center', paddingRight: 2 }} aria-hidden="true">
+            <div style={{ width: 2, height: 22, borderLeft: '1px solid var(--bevel-light)', borderRight: '1px solid var(--bevel-dark)' }} />
+            <div style={{ width: 2, height: 22, borderLeft: '1px solid var(--bevel-light)', borderRight: '1px solid var(--bevel-dark)' }} />
           </div>
           <button className="quick-launch-btn" onClick={onToggleShowDesktop} title="Show Desktop (Win+D)" aria-label="Show Desktop">
-            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+            <svg width="22" height="22" viewBox="0 0 16 16" fill="none">
               <rect x="1" y="2" width="14" height="10" fill="#008080" stroke="#000" strokeWidth="1" />
               <rect x="3" y="4" width="10" height="6" fill="#FFF" />
               <rect x="5" y="12" width="6" height="2" fill="#808080" />
             </svg>
           </button>
-          <button className="quick-launch-btn" onClick={() => onLaunchApp?.('browser')} title="Internet Explorer" aria-label="Internet Explorer">
-            <BrowserIcon size={18} />
+          <button className="quick-launch-btn" onClick={() => onLaunchApp?.('browser')} title="World Wide Web Browser" aria-label="Internet Browser">
+            <BrowserIcon size={22} />
           </button>
-          <button className="quick-launch-btn" onClick={() => onLaunchApp?.('media-player')} title="Media Player" aria-label="Media Player">
-            <MediaPlayerIcon size={18} />
+          <button className="quick-launch-btn" onClick={() => onLaunchApp?.('media-player')} title="CloudDesk Media Player" aria-label="Media Player">
+            <MediaPlayerIcon size={22} />
           </button>
-          <button className="quick-launch-btn" onClick={() => onLaunchApp?.('paint')} title="Paint" aria-label="Paint">
-            <PaintIcon size={18} />
+          <button className="quick-launch-btn" onClick={() => onLaunchApp?.('paint')} title="Paint — Bitmap Editor" aria-label="Paint">
+            <PaintIcon size={22} />
           </button>
-          <button className="quick-launch-btn" onClick={() => onLaunchApp?.('notepad')} title="Notepad" aria-label="Notepad">
-            <NotepadIcon size={18} />
+          <button className="quick-launch-btn" onClick={() => onLaunchApp?.('notepad')} title="Notepad Text Editor" aria-label="Notepad">
+            <NotepadIcon size={22} />
           </button>
           <button className="quick-launch-btn" onClick={() => onLaunchApp?.('file-explorer')} title="My Computer (C:)" aria-label="My Computer">
-            <MyComputerIcon size={18} />
+            <MyComputerIcon size={22} />
+          </button>
+          <button className="quick-launch-btn" onClick={() => onLaunchApp?.('email')} title="CloudDesk Mail" aria-label="Cloud Mail">
+            <EmailIcon size={22} />
+          </button>
+          <button className="quick-launch-btn" onClick={() => onLaunchApp?.('terminal')} title="MS-DOS Prompt" aria-label="MS-DOS Prompt">
+            <TerminalIcon size={22} />
           </button>
         </div>
 
@@ -312,7 +318,7 @@ export default function Taskbar({
 
 function StartLogoIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style={{ imageRendering: 'pixelated' }}>
+    <svg width="22" height="22" viewBox="0 0 20 20" fill="none" style={{ imageRendering: 'pixelated' }}>
       <polygon points="2,3 9,1 9,8 2,10" fill="#E81123" />
       <polygon points="10.5,1 18,3 18,10 10.5,8" fill="#107C10" />
       <polygon points="2,11.5 9,9.5 9,16.5 2,18.5" fill="#0078D7" />
