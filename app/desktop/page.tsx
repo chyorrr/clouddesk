@@ -12,7 +12,7 @@ const DEFAULT_FOLDERS = [
   'Music',
 ]
 
-async function seedUserFilesystem(userId: string) {
+async function seedUserFilesystem(userId: string, email?: string, username?: string) {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL) return
 
   try {
@@ -20,6 +20,19 @@ async function seedUserFilesystem(userId: string) {
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
     )
+
+    // Ensure user_settings has email and username recorded for mail lookup
+    await adminClient
+      .from('user_settings')
+      .upsert({
+        user_id: userId,
+        email: email || null,
+        username: username || (email ? email.split('@')[0] : null),
+        wallpaper: 'bliss',
+        theme: 'classic',
+        sound_enabled: false,
+        icon_size: 'medium'
+      }, { onConflict: 'user_id' })
 
     // Check existing root items
     const { data: existing } = await adminClient
@@ -56,11 +69,6 @@ async function seedUserFilesystem(userId: string) {
         is_deleted: false,
       }))
     )
-
-    await adminClient
-      .from('user_settings')
-      .upsert({ user_id: userId, wallpaper: 'bliss', theme: 'classic', sound_enabled: false, icon_size: 'medium' })
-      .match({ user_id: userId })
   } catch (err) {
     console.error('Seed user error:', err)
   }
@@ -88,13 +96,13 @@ export default async function DesktopPage() {
     redirect('/login')
   }
 
-  if (user) {
-    await seedUserFilesystem(user.id)
-  }
-
   const username = user
     ? user.user_metadata?.username || user.email?.split('@')[0] || 'User'
     : 'Harsh'
+
+  if (user) {
+    await seedUserFilesystem(user.id, user.email, username)
+  }
 
   const userId = user ? user.id : 'guest-user-session'
 

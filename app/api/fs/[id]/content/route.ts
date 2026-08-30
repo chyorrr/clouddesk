@@ -33,6 +33,15 @@ export async function GET(_req: NextRequest, { params }: Params) {
       .eq('user_id', user.id)
       .single()
 
+    if (item?.storage_path?.startsWith('data:')) {
+      const parts = item.storage_path.split(',')
+      const base64 = parts[1] || ''
+      const decoded = Buffer.from(base64, 'base64').toString('utf-8')
+      return new NextResponse(decoded, {
+        headers: { 'Content-Type': item.mime_type || 'text/plain; charset=utf-8' }
+      })
+    }
+
     if (!item?.storage_path || item.storage_path.startsWith('local://')) {
       const fallbackText = getGuestFileContent(id)
       return new NextResponse(fallbackText, {
@@ -97,8 +106,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
     storagePath = `${user.id}/${uuid()}.txt`
   }
 
-  const blob = new Blob([content], { type: 'text/plain' })
-  const buffer = Buffer.from(await blob.arrayBuffer())
+  const buffer = Buffer.from(content, 'utf-8')
 
   const { error: uploadError } = await supabase.storage
     .from('user-files')
@@ -107,13 +115,16 @@ export async function PUT(request: NextRequest, { params }: Params) {
       upsert: true,
     })
 
-  if (uploadError) return NextResponse.json({ error: uploadError.message }, { status: 500 })
+  if (uploadError) {
+    console.warn('Storage upload error in PUT content, falling back to data URL:', uploadError.message)
+    storagePath = `data:text/plain;charset=utf-8;base64,${buffer.toString('base64')}`
+  }
 
   const { data, error } = await supabase
     .from('filesystem')
     .update({
       storage_path: storagePath,
-      size: content.length,
+      size: Buffer.byteLength(content, 'utf-8'),
       mime_type: 'text/plain',
       updated_at: new Date().toISOString(),
     })
@@ -122,8 +133,8 @@ export async function PUT(request: NextRequest, { params }: Params) {
     .select()
     .single()
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json(data)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
   } catch (err) {
     if (isGuest) {
       setGuestFileContent(id, content)

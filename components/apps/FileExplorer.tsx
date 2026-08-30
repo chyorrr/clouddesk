@@ -462,6 +462,19 @@ export default function FileExplorer({
       className="explorer-container"
       style={{ height: '100%' }}
       onContextMenu={handleBgContextMenu}
+      onDragOver={(e) => {
+        if (e.dataTransfer.types.includes('Files')) {
+          e.preventDefault()
+          e.stopPropagation()
+        }
+      }}
+      onDrop={(e) => {
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          e.preventDefault()
+          e.stopPropagation()
+          handleFileUpload(e.dataTransfer.files)
+        }
+      }}
     >
       {/* Toolbar */}
       <div className="window-toolbar">
@@ -841,6 +854,20 @@ export default function FileExplorer({
           onConfirm={() => setDialog(null)}
         />
       )}
+
+      {/* Hidden File Input for Upload */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        style={{ display: 'none' }}
+        onChange={(e) => {
+          if (e.target.files && e.target.files.length > 0) {
+            handleFileUpload(e.target.files)
+            e.target.value = ''
+          }
+        }}
+      />
 
     </div>
   )

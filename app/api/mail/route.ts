@@ -118,17 +118,34 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Deliver to recipient inbox
-    // Check if recipient is a registered user
     const cleanTo = to.toLowerCase().trim()
-    const { data: recipientUser } = await supabase
-      .from('filesystem')
-      .select('user_id')
-      .limit(1)
+    let recipientUserId: string | null = null
 
-    if (recipientUser?.user_id) {
+    // Try RPC function first
+    try {
+      const { data: rpcUserId } = await supabase.rpc('get_user_id_by_address', { target_address: cleanTo })
+      if (rpcUserId) recipientUserId = rpcUserId
+    } catch {}
+
+    // Fallback: Check user_settings by email or username
+    if (!recipientUserId) {
+      const prefix = cleanTo.split('@')[0]
+      const { data: settingsRow } = await supabase
+        .from('user_settings')
+        .select('user_id')
+        .or(`email.ilike.${cleanTo},username.ilike.${prefix},username.ilike.${cleanTo}`)
+        .limit(1)
+        .maybeSingle()
+
+      if (settingsRow?.user_id) {
+        recipientUserId = settingsRow.user_id
+      }
+    }
+
+    if (recipientUserId && recipientUserId !== user.id) {
       // Store in recipient's inbox
       await supabase.from('emails').insert({
-        user_id: recipientUser.user_id,
+        user_id: recipientUserId,
         folder: 'inbox',
         from_address: senderAddress,
         to_address: to,

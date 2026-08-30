@@ -30,6 +30,10 @@ export async function GET(_req: NextRequest, { params }: Params) {
       .eq('user_id', user.id)
       .single()
 
+    if (item?.storage_path?.startsWith('data:')) {
+      return NextResponse.json({ url: item.storage_path, name: item.name })
+    }
+
     if (!item?.storage_path) {
       // Check if it's a guest-seeded fallback item
       const guestData = getGuestDownloadUrl(id)

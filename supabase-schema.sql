@@ -75,6 +75,8 @@ ALTER TABLE public.user_settings ADD COLUMN IF NOT EXISTS wallpaper TEXT NOT NUL
 ALTER TABLE public.user_settings ADD COLUMN IF NOT EXISTS theme TEXT NOT NULL DEFAULT 'classic';
 ALTER TABLE public.user_settings ADD COLUMN IF NOT EXISTS sound_enabled BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE public.user_settings ADD COLUMN IF NOT EXISTS icon_size TEXT NOT NULL DEFAULT 'medium';
+ALTER TABLE public.user_settings ADD COLUMN IF NOT EXISTS username TEXT;
+ALTER TABLE public.user_settings ADD COLUMN IF NOT EXISTS email TEXT;
 
 ALTER TABLE public.user_settings ENABLE ROW LEVEL SECURITY;
 
@@ -84,6 +86,42 @@ CREATE POLICY "Users can manage their own settings"
   FOR ALL
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
+
+-- Function to resolve recipient user_id by username or email for CloudDesk Mail
+CREATE OR REPLACE FUNCTION public.get_user_id_by_address(target_address TEXT)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  target_id UUID;
+  clean_target TEXT := lower(trim(target_address));
+  prefix_target TEXT := split_part(lower(trim(target_address)), '@', 1);
+BEGIN
+  -- 1. Check user_settings by email or username
+  SELECT user_id INTO target_id
+  FROM public.user_settings
+  WHERE lower(email) = clean_target
+     OR lower(username) = prefix_target
+     OR lower(username) = clean_target
+  LIMIT 1;
+
+  IF target_id IS NOT NULL THEN
+    RETURN target_id;
+  END IF;
+
+  -- 2. Check auth.users by email or username in metadata
+  SELECT id INTO target_id
+  FROM auth.users
+  WHERE lower(email) = clean_target
+     OR lower(raw_user_meta_data->>'username') = prefix_target
+     OR lower(raw_user_meta_data->>'username') = clean_target
+     OR lower(split_part(email, '@', 1)) = prefix_target
+  LIMIT 1;
+
+  RETURN target_id;
+END;
+$$;
 
 -- ============================================================
 -- 3. DESKTOP ICON POSITIONS TABLE
@@ -196,3 +234,40 @@ CREATE POLICY "Users can manage their own recent files"
   FOR ALL
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
+
+-- ============================================================
+-- 8. STORAGE BUCKET & POLICIES (user-files)
+-- ============================================================
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('user-files', 'user-files', false)
+ON CONFLICT (id) DO NOTHING;
+
+-- Storage object policies for user-files
+DROP POLICY IF EXISTS "Authenticated users can upload files" ON storage.objects;
+CREATE POLICY "Authenticated users can upload files"
+  ON storage.objects
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (bucket_id = 'user-files');
+
+DROP POLICY IF EXISTS "Users can read own files" ON storage.objects;
+CREATE POLICY "Users can read own files"
+  ON storage.objects
+  FOR SELECT
+  TO authenticated
+  USING (bucket_id = 'user-files');
+
+DROP POLICY IF EXISTS "Users can update own files" ON storage.objects;
+CREATE POLICY "Users can update own files"
+  ON storage.objects
+  FOR UPDATE
+  TO authenticated
+  USING (bucket_id = 'user-files');
+
+DROP POLICY IF EXISTS "Users can delete own files" ON storage.objects;
+CREATE POLICY "Users can delete own files"
+  ON storage.objects
+  FOR DELETE
+  TO authenticated
+  USING (bucket_id = 'user-files');
