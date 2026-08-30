@@ -25,9 +25,9 @@ export default function Terminal({ onLaunchApp, onClose }: TerminalProps) {
       id: 'init-1',
       output: (
         <div>
-          <div>CloudDesk Personal Computer (TM)</div>
-          <div>MS-DOS Version 6.22 (CloudDesk Emulation 2.0)</div>
-          <div>(C)Copyright Microsoft Corp 1981-1994. All rights reserved.</div>
+          <div>CloudDesk Personal Computer [Version 2.0.4200]</div>
+          <div>Crete DOS Environment 6.22 (CloudDesk Emulation)</div>
+          <div>(C) Copyright 2026 Crete Corporation. All rights reserved.</div>
           <div style={{ marginTop: 6, color: '#A0A0A0' }}>
             Type <span style={{ color: '#FFF' }}>HELP</span> for a list of available commands.
           </div>

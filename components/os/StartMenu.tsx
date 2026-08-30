@@ -106,15 +106,16 @@ export default function StartMenu({
             writingMode: 'vertical-rl',
             transform: 'rotate(180deg)',
             color: '#FFFFFF',
-            fontSize: 14,
+            fontSize: 13,
             fontWeight: 'bold',
-            letterSpacing: '3px',
+            letterSpacing: '2.5px',
             fontFamily: 'var(--font-ui)',
             whiteSpace: 'nowrap',
           }}
         >
+          <span style={{ color: '#FFD700', fontSize: 10, fontWeight: 900 }}>CRETE </span>
           <span style={{ color: '#FFFFFF', fontWeight: 900 }}>CloudDesk</span>{' '}
-          <span style={{ color: '#FFD700', fontSize: 11, fontWeight: 'bold' }}>2.0</span>
+          <span style={{ color: '#A0E0FF', fontSize: 10, fontWeight: 'bold' }}>2.0</span>
         </div>
       </div>
 

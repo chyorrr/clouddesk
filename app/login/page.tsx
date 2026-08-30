@@ -137,11 +137,12 @@ export default function LoginPage() {
             paddingBottom: 8,
             borderBottom: '1px solid var(--bevel-mid-dark)',
           }}>
-            <div style={{ fontWeight: 'bold', fontSize: 14, letterSpacing: -0.3 }}>
-              CloudDesk
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4 }}>
+              <img src="/icons/crete-logo.png" alt="Crete" width={22} height={22} style={{ imageRendering: 'pixelated' }} />
+              <span style={{ fontWeight: 'bold', fontSize: 14, letterSpacing: -0.3 }}>CloudDesk</span>
             </div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
-              Your computer. In the cloud.
+            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+              Your computer in the cloud &middot; Powered by <strong>Crete</strong>
             </div>
           </div>
 

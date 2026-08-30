@@ -82,13 +82,14 @@ export default function SignupPage() {
               paddingBottom: 8,
               borderBottom: '1px solid var(--bevel-mid-dark)',
             }}>
-              <div style={{ fontWeight: 'bold', fontSize: 14, letterSpacing: -0.3 }}>
-                CloudDesk
-              </div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
-                Set up your personal computer
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4 }}>
+              <img src="/icons/crete-logo.png" alt="Crete" width={22} height={22} style={{ imageRendering: 'pixelated' }} />
+              <span style={{ fontWeight: 'bold', fontSize: 14, letterSpacing: -0.3 }}>CloudDesk</span>
             </div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+              Set up your personal computer &middot; Powered by <strong>Crete</strong>
+            </div>
+          </div>
 
             {error && (
               <div className="auth-error" role="alert">{error}</div>

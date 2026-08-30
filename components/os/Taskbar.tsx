@@ -320,16 +320,20 @@ export default function Taskbar({
 
 function StartLogoIcon() {
   return (
-    <svg width="24" height="24" viewBox="0 0 20 20" fill="none" style={{ imageRendering: 'pixelated' }}>
-      <polygon points="2,3 9,1 9,8 2,10" fill="#E81123" />
-      <polygon points="10.5,1 18,3 18,10 10.5,8" fill="#107C10" />
-      <polygon points="2,11.5 9,9.5 9,16.5 2,18.5" fill="#0078D7" />
-      <polygon points="10.5,9.5 18,11.5 18,18.5 10.5,16.5" fill="#FFB900" />
-      <rect x="0" y="5" width="1.5" height="1.5" fill="#E81123" />
-      <rect x="0" y="13" width="1.5" height="1.5" fill="#0078D7" />
-      <rect x="18.5" y="5" width="1.5" height="1.5" fill="#107C10" />
-      <rect x="18.5" y="13" width="1.5" height="1.5" fill="#FFB900" />
-    </svg>
+    <img
+      src="/icons/crete-logo.png"
+      alt="Start"
+      width={24}
+      height={24}
+      style={{
+        width: 24,
+        height: 24,
+        objectFit: 'contain',
+        imageRendering: 'pixelated',
+        flexShrink: 0,
+        display: 'block',
+      }}
+    />
   )
 }
 

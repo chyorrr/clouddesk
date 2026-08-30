@@ -128,6 +128,31 @@ const TOPICS: Topic[] = [
       </div>
     ),
   },
+  {
+    id: 'about',
+    title: 'About Crete CloudDesk',
+    category: 'System',
+    content: (
+      <div>
+        <h2 className="help-h1">About Crete CloudDesk</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16, background: '#F8F8F8', border: '1px solid #CCC', padding: 12 }}>
+          <img src="/icons/crete-logo.png" alt="Crete" width={44} height={44} style={{ imageRendering: 'pixelated' }} />
+          <div>
+            <h3 style={{ margin: '0 0 4px', color: '#000080', fontSize: 15 }}>CloudDesk Personal Computer 2.0</h3>
+            <p style={{ margin: 0, fontSize: 12, color: '#555' }}>
+              Engineered and Developed by <strong>Crete</strong>
+            </p>
+          </div>
+        </div>
+        <p>
+          CloudDesk is a tactile, retro cloud workstation crafted by <strong>Crete</strong>. It combines classic 90s personal computing aesthetics with modern cloud persistence, encrypted file storage, and real-time collaboration.
+        </p>
+        <div style={{ borderTop: '1px solid #CCC', marginTop: 16, paddingTop: 10, fontSize: 11, color: '#666' }}>
+          &copy; 2026 Crete Corporation. All rights reserved.
+        </div>
+      </div>
+    ),
+  },
 ]
 
 export default function HelpViewer() {

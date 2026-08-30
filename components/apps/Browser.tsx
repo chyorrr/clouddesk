@@ -188,11 +188,14 @@ export default function Browser() {
         {currentDestination === 'home' ? (
           <div className="browser-home" style={{ padding: 24, height: '100%', overflowY: 'auto' }}>
             <div style={{ textAlign: 'center', borderBottom: '3px double #000080', paddingBottom: 16, marginBottom: 20 }}>
-              <h1 style={{ color: '#000080', fontSize: 24, margin: '0 0 6px' }}>
-                🌐 CloudDesk World Wide Web
-              </h1>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 6 }}>
+                <img src="/icons/crete-logo.png" alt="Crete" width={28} height={28} style={{ imageRendering: 'pixelated' }} />
+                <h1 style={{ color: '#000080', fontSize: 24, margin: 0 }}>
+                  CloudDesk World Wide Web
+                </h1>
+              </div>
               <p style={{ fontSize: 12, fontStyle: 'italic', margin: 0, color: '#444' }}>
-                Internet Portal &middot; Web Search &middot; Global Directory
+                Internet Portal &middot; Web Search &middot; Powered by <strong>Crete</strong>
               </p>
             </div>
 
